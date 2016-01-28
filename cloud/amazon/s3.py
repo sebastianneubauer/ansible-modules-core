@@ -437,16 +437,17 @@ def main():
     if not s3_url and 'S3_URL' in os.environ:
         s3_url = os.environ['S3_URL']
 
+    is_fake = is_fakes3(s3_url)
     # bucket names with .'s in them need to use the calling_format option,
     # otherwise the connection will fail. See https://github.com/boto/boto/issues/2836
-    # for more details.
-    if '.' in bucket:
+    # for more details. In fake connection this is done anyhow.
+    if '.' in bucket and not is_fake:
         aws_connect_kwargs['calling_format'] = OrdinaryCallingFormat()
 
     # Look at s3_url and tweak connection settings
     # if connecting to Walrus or fakes3
     try:
-        if is_fakes3(s3_url):
+        if is_fake:
             fakes3 = urlparse.urlparse(s3_url)
             s3 = S3Connection(
                 is_secure=fakes3.scheme == 'fakes3s',
